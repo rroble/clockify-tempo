@@ -28,7 +28,7 @@ if (fs.existsSync(runId)) {
     for (const day of days) {
         console.log("------", day.toISOString(), "------");
         const worklog = new Worklog({
-            issueKey: "TIQ-2149",
+            issueKey: process.env.JIRA_TICKET || "TIQ-2149",
             date: day.utc().toISOString(),
             timeSpentSeconds: 8.5 * 3600,
             authorAccountId: process.env.JIRA_USER as string,
