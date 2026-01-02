@@ -5,9 +5,27 @@ import { isVacation } from "./vacation.js";
 import { Worklog } from "../lib/Worklog.js";
 import * as Tempo from "../lib/Tempo.js";
 import * as Clockify from "../lib/Clockify.js";
+import os from "os";
+import fs from "fs";
+
+const days = daily();
+if (!days || days.length === 0) {
+    console.error("[Clockify Tempo] Cannot identify days, please check env like YEAR, MONTH, SHIFT_START");
+    process.exit(1);
+}
+
+const runId = (() => {
+    return os.tmpdir() + `/clockify_tempo_${days[0]?.format("YYYY-MM")}_${days.length}`;
+})();
+
+if (fs.existsSync(runId)) {
+    console.warn(`[Clockify Tempo] ${days[0]?.format("MMMM")} logs exist, aborting to avoid duplicates.`);
+    process.exit();
+}
 
 (async() => {
-    for (const day of daily()) {
+    console.log(`[Clockify Tempo] Logging for whole month of ${days[0]?.format("MMMM")}`);
+    for (const day of days) {
         console.log("------", day.toISOString(), "------");
         const worklog = new Worklog({
             issueKey: "TIQ-2149",
@@ -37,5 +55,8 @@ import * as Clockify from "../lib/Clockify.js";
         console.log("Clockify:", clockifyResult);
     }
 })().then(() => {
-    console.log("Done");
+    fs.writeFileSync(runId, runId);
+    console.log("[Clockify Tempo] Done.");
+}).catch((err) => {
+    console.trace(err);
 });
