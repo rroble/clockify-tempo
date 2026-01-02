@@ -28,17 +28,15 @@ if (fs.existsSync(runId)) {
     for (const day of days) {
         console.log("------", day.toISOString(), "------");
         const worklog = new Worklog({
-            issueKey: process.env.JIRA_TICKET || "TIQ-2149",
-            date: day.utc().toISOString(),
+            issueKey: process.env.JIRA_TICKET as string,
+            date: day.utc(),
             timeSpentSeconds: 8.5 * 3600,
-            authorAccountId: process.env.JIRA_USER as string,
         });
 
         const { holiday, name } = isHoliday(day);
         if (holiday) {
             worklog.setIssueKey("Holiday")
                 .setDescription(name || "Holiday");
-
         }
 
         const { vacation, type } = isVacation(day);
@@ -51,8 +49,7 @@ if (fs.existsSync(runId)) {
             holiday || vacation || Tempo.log(worklog.data()),
             Clockify.newEntry(worklog.data()),
         ]);
-        console.log("Tempo:", tempoResult);
-        console.log("Clockify:", clockifyResult);
+        console.log(tempoResult, "\n", clockifyResult);
     }
 })().then(() => {
     fs.writeFileSync(runId, runId);

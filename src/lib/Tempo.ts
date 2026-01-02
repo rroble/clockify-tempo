@@ -1,32 +1,30 @@
-import moment from "moment";
+import { Mapping } from "./Mapping.js";
 import type { WorklogOptions } from "./Worklog.js";
 
 interface WorklogEntry extends Omit<WorklogOptions, "issueKey"> {
     issueId: number;
     startDate: string;
     startTime: string;
+    authorAccountId: string;
 }
+
 const worklogsURL = "https://api.tempo.io/4/worklogs";
 
-// issue key = issue id
-const mapping: Record<string, number> = {
-    "TIQ-2149": 215050,
-};
-
 export const log = async(options: WorklogOptions) => {
-    const issueId = mapping[options.issueKey];
-    if (issueId === undefined) {
-        throw new Error(`No mapping for issue: ${options.issueKey}`);
+    const project = Mapping.get(options.issueKey);
+    if (project === undefined) {
+        throw new Error(`[Tempo] No mapping for issue: ${options.issueKey}`);
     }
 
-    const dt = moment(options.date);
     const worklog: WorklogEntry = {
-            ...options,
-            startDate: dt.format("YYYY-MM-DD"),
-            startTime: dt.format("HH:MM:ss"),
-            issueId,
-            description: options.description || options.issueKey,
-        }
+        ...options,
+        startDate: options.date.format("YYYY-MM-DD"),
+        startTime: options.date.format("HH:MM:ss"),
+        issueId: project.issueId as number,
+        description: options.description || project.description || options.issueKey,
+        authorAccountId: process.env.JIRA_USER as string,
+    };
+
     const response = await fetch(worklogsURL, {
         method: "POST",
         headers: {
@@ -37,10 +35,10 @@ export const log = async(options: WorklogOptions) => {
         body: JSON.stringify(worklog),
     });
     const body = await response.json();
-    // console.log(JSON.stringify({ worklog, body }, null, 4));
 
     if (response.status >= 299) {
-        throw new Error(`Expecting 2xx status, got ${response.status}`);
+        console.log("[Tempo]", JSON.stringify({ worklog, body }, null, 4));
+        throw new Error(`[Tempo] Expecting 2xx status, got ${response.status}`);
     }
     try {
         return JSON.stringify(body);

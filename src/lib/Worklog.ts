@@ -1,11 +1,12 @@
+import type { Moment } from "moment";
+
 export type IssueKey = string | "Holiday" | "Vacation"; 
 
 export interface WorklogOptions {
     issueKey: IssueKey;
     description?: string;
     timeSpentSeconds: number;
-    authorAccountId: string;
-    date: string; // ISO date
+    date: Moment;
 }
 
 export class Worklog {

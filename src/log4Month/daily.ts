@@ -4,7 +4,7 @@ export const daily = () => {
     const today = moment();
 	const year  = process.env.YEAR || today.year();
 	const month = process.env.MONTH || today.format("MMMM");
-    const shiftStart = process.env.SHIFT_START || "13:00:00"; // shift starts at 1pm (13:00)
+    const shiftStart = process.env.SHIFT_START || "08:00:00";
 
     const result: Moment[] = [];
 
