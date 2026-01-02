@@ -1,4 +1,6 @@
 import moment, { type Moment } from "moment";
+import holidays from "../../holidays.json" with { type: "json" };
+import vacation from "../../vacation.json" with { type: "json" };
 
 export const daily = () => {
     const today = moment();
@@ -28,4 +30,23 @@ export const daily = () => {
     }
 
     return result;
+};
+
+export const isHoliday = (day: Moment) => {
+    const date = day.format("YYYY-MM-DD");
+    const name = (holidays as Record<string, string>)[date];
+    return {
+        holiday: name !== undefined,
+        name,
+    };
+};
+
+
+export const isVacation = (day: Moment) => {
+    const date = day.format("YYYY-MM-DD");
+    const name = (vacation as Record<string, string>)[date];
+    return {
+        vacation: name !== undefined,
+        type: name,
+    };
 };

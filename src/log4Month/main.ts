@@ -1,7 +1,5 @@
 import "dotenv/config"; // load env first!
-import { daily } from "./daily.js";
-import { isHoliday } from "./holidays.js";
-import { isVacation } from "./vacation.js";
+import { daily, isHoliday, isVacation } from "./lib.js";
 import { Worklog } from "../lib/Worklog.js";
 import * as Tempo from "../lib/Tempo.js";
 import * as Clockify from "../lib/Clockify.js";
