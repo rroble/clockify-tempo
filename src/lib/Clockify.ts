@@ -39,7 +39,7 @@ export const newEntry = async(worklog: WorklogOptions) => {
     });
     const body = await response.json();
 
-    if (response.status >= 299) {
+    if (response.status > 299) {
         console.log("[Clockify]", JSON.stringify({ newTimeEntryURL, entry, body }, null, 4));
         throw new Error(`[Clockify] Expecting 2xx status, got ${response.status}`);
     }

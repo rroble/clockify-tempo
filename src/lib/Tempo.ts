@@ -36,7 +36,7 @@ export const log = async(options: WorklogOptions) => {
     });
     const body = await response.json();
 
-    if (response.status >= 299) {
+    if (response.status > 299) {
         console.log("[Tempo]", JSON.stringify({ worklog, body }, null, 4));
         throw new Error(`[Tempo] Expecting 2xx status, got ${response.status}`);
     }
