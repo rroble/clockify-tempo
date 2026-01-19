@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 YEAR=2026 \
-MONTH=Jan \
+MONTH=Feb \
 npx tsx src/log4Month/main.ts
 
 # npm run build && \
