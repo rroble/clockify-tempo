@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# SIMULATION=true \
 YEAR=2026 \
 MONTH=Feb \
 npx tsx src/log4Month/main.ts

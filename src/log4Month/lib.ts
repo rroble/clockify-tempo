@@ -37,7 +37,7 @@ export const isHoliday = (day: Moment) => {
     const name = (holidays as Record<string, string>)[date];
     return {
         holiday: name !== undefined,
-        name,
+        holidayName: name,
     };
 };
 
@@ -47,6 +47,6 @@ export const isVacation = (day: Moment) => {
     const name = (vacation as Record<string, string>)[date];
     return {
         vacation: name !== undefined,
-        type: name,
+        vacationType: name,
     };
 };

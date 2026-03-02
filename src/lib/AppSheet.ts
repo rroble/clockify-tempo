@@ -7,7 +7,7 @@ const cache = {
     data: {} as Record<string, any>,
 };
 
-let browser: any;
+let browser: puppeteer.Browser;
 
 export const login = async (url: string, headless = true) => {
     const args = [
@@ -24,7 +24,7 @@ export const login = async (url: string, headless = true) => {
     });
     const page = await browser.newPage();
 
-    const storage =() => {
+    const storage = () => {
         const data: Record<string, string> = {};
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i) as string;
@@ -49,36 +49,84 @@ export const login = async (url: string, headless = true) => {
                         localStorage: Object.keys(localStorage).length,
                     });
                     resolve({ cookies, localStorage });
-                    browser.close();
                 })
             }
         });
-        page.goto(url).then(() => {
+        page.goto(url, { waitUntil: 'domcontentloaded' }).then(() => {
             console.log(`[AppSheet] Go to ${url} ..`);
         });
     });
 };
 
-export const init = async(url: string) => {
+export const close = async() => {
+    if (browser) {
+        await browser.close();
+    }
+};
+
+let document: any;
+
+async function getActivePage(browser: puppeteer.Browser, timeout = 5000) {
+  const start = new Date().getTime();
+  while (new Date().getTime() - start < timeout) {
+    const pages = await browser.pages();
+    for (const p of pages) {
+      if (await p.evaluate(() => document.visibilityState === 'visible')) {
+        return p;
+      }
+    }
+  }
+  throw "Unable to get active page";
+}
+
+export const init = async(url: string, headless?: boolean) => {
     let result = await Promise.race([
-        login(url),
+        login(url, headless),
         new Promise(resolve => setTimeout(() => { resolve("timeout") }, 7_000)),
     ]);
     if (result === "timeout") {
         if (browser !== undefined) {
             await browser.close();
         }
-        result = await login(url, false) as any;
+        result = await login(url, headless || false) as any;
     }
     cache.data = { ...cache.data, ...(result as any) };
 
-    console.log("[AppSheet]", { cache });
+    return await getActivePage(browser);
 };
 
 interface WorklogEntry extends Omit<WorklogOptions, "issueKey"> {
     // TODO
 }
 
-export const log = async(options: WorklogOptions) => {
-    // TODO: fetch or browser
+let window: any;
+
+export const log = async(options: WorklogOptions, page: puppeteer.Page) => {
+    console.log("page", { url: page.url() });
+
+    // await page.waitForNavigation();
+
+    if (page.url().includes("#")) {
+        await page.evaluate(() => { window.onbeforeunload = null; });
+        await page.reload({ waitUntil: 'load' });
+    }
+
+    const logHoursButton = page.locator('button ::-p-text(Log Hours)');
+    console.log({ logHoursButton })
+    if (!logHoursButton) {
+        console.log("Cannot find + Log Hours button");
+        return;
+    }
+    await logHoursButton?.click();
+
+    const saveButton  = page.locator('button ::-p-text(Save)');
+    console.log({ saveButton })
+    if (!saveButton) {
+        console.log("Cannot find Save button");
+        return;
+    }
+    await page.locator('input[aria-label="WorkDate"]').fill(options.date.format("YYYY-MM-DD"));
+    await page.locator('input[aria-label="Project"]').fill("TIQQE");
+    await page.keyboard.press('Enter');
+    await saveButton?.click();
 };

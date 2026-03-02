@@ -1,9 +1,9 @@
 import "dotenv/config"; // load env first!
 import { daily, isHoliday, isVacation } from "./lib.js";
 import { Worklog } from "../lib/Worklog.js";
-// import * as Tempo from "../lib/Tempo.js";
 import * as Clockify from "../lib/Clockify.js";
 import * as AppSheet from "../lib/AppSheet.js";
+import * as Sprout from "../lib/Sprout.js";
 import os from "os";
 import fs from "fs";
 
@@ -23,10 +23,10 @@ const runId = ((check = true) => {
         process.exit();
     }
     return runId;
-})(false);
+})(process.env.SIMULATION !== "true");
 
 (async() => {
-    await AppSheet.init(process.env.APP_SHEET_URL as string);
+    const page = await AppSheet.init(process.env.APP_SHEET_URL as string, (process.env.SIMULATION !== "true"));
 
     console.log(`[Clockify Tempo] Logging for whole month of ${days[0]?.format("MMMM")}`);
     for (const day of days) {
@@ -37,21 +37,23 @@ const runId = ((check = true) => {
             timeSpentSeconds: 8.5 * 3600,
         });
 
-        const { holiday, name } = isHoliday(day);
+        const { holiday, holidayName } = isHoliday(day);
         if (holiday) {
             worklog.setIssueKey("Holiday")
-                .setDescription(name || "Holiday");
+                .setDescription(holidayName || "Holiday");
         }
 
-        const { vacation, type } = isVacation(day);
+        const { vacation, vacationType } = isVacation(day);
         if (vacation) {
             worklog.setIssueKey("Vacation")
-                .setDescription(type || "Leave");
+                .setDescription(vacationType || "Leave");
         }
 
         const [appSheetResult, clockifyResult] = await Promise.all([
-            holiday || vacation || AppSheet.log(worklog.data()),
-            "ignored", // Clockify.newEntry(worklog.data()),
+            "ignored", // holiday || vacation || AppSheet.log(worklog.data(), page),
+            Clockify.newEntry(worklog.data()),
+            vacation && Sprout.setVacation(day, vacationType),
+            holiday && Sprout.setHoliday(day, holidayName),
         ]);
         console.log(JSON.stringify({ appSheetResult, clockifyResult }, null, 4));
     } // for
@@ -60,4 +62,6 @@ const runId = ((check = true) => {
     console.log("[Clockify Tempo] Done.");
 }).catch((err) => {
     console.trace(err);
+}).finally(async() => {
+    await AppSheet.close();
 });
