@@ -26,7 +26,9 @@ const runId = ((check = true) => {
 })(process.env.SIMULATION !== "true");
 
 (async() => {
-    const page = await AppSheet.init(process.env.APP_SHEET_URL as string, (process.env.SIMULATION !== "true"));
+    // const show = (process.env.SIMULATION !== "true")
+    const show = true;
+    const page = await AppSheet.init(process.env.APP_SHEET_URL as string, !show);
 
     console.log(`[Clockify Tempo] Logging for whole month of ${days[0]?.format("MMMM")}`);
     for (const day of days) {
@@ -50,7 +52,7 @@ const runId = ((check = true) => {
         }
 
         const [appSheetResult, clockifyResult] = await Promise.all([
-            "ignored", // holiday || vacation || AppSheet.log(worklog.data(), page),
+            holiday || vacation || AppSheet.log(worklog.data(), page),
             Clockify.newEntry(worklog.data()),
             vacation && Sprout.setVacation(day, vacationType),
             holiday && Sprout.setHoliday(day, holidayName),

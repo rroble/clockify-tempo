@@ -111,22 +111,43 @@ export const log = async(options: WorklogOptions, page: puppeteer.Page) => {
         await page.reload({ waitUntil: 'load' });
     }
 
+    console.log("Finding Log Hours button..");
     const logHoursButton = page.locator('button ::-p-text(Log Hours)');
-    console.log({ logHoursButton })
     if (!logHoursButton) {
         console.log("Cannot find + Log Hours button");
         return;
     }
+    console.log("Clicking Log Hours button..");
     await logHoursButton?.click();
 
+    console.log("Finding Save button..");
     const saveButton  = page.locator('button ::-p-text(Save)');
-    console.log({ saveButton })
     if (!saveButton) {
         console.log("Cannot find Save button");
         return;
     }
-    await page.locator('input[aria-label="WorkDate"]').fill(options.date.format("YYYY-MM-DD"));
+    console.log("Selecting project..");
     await page.locator('input[aria-label="Project"]').fill("TIQQE");
+    console.log("Pressing Enter to select project..");
     await page.keyboard.press('Enter');
+    console.log("Setting date..");
+    await page.locator('input[aria-label="The date when the work happened"]').fill(options.date.format("YYYY-MM-DD"));
+    console.log("Clicking Save button..");
     await saveButton?.click();
+
+    console.log("Finding Sync button..");
+    const syncButton = page.locator('button[aria-label="Sync"]');
+    if (!syncButton) {
+        console.log("Cannot find Sync button");
+        return;
+    }
+
+    console.log("Clicking Sync button..");
+    await syncButton.click();
+    console.log("Waiting for Sync complete..");
+    await page.waitForSelector('span ::-p-text(Sync complete)');
+    // pause for x seconds to ensure sync is complete
+    await new Promise(resolve => setTimeout(resolve, 3_000));
+    await page.reload({ waitUntil: 'load' });
+    console.log("Sync complete.");
 };
