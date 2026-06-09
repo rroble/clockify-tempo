@@ -2,7 +2,7 @@
 
 # SIMULATION=true \
 YEAR=2026 \
-MONTH=May \
+MONTH=June \
 npx tsx src/log4Month/main.ts
 
 # npm run build && \
