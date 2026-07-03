@@ -52,6 +52,7 @@ export const login = async (url: string, headless = true) => {
                 })
             }
         });
+        console.log("[AppSheet] Go to", { url: url || "undefined" });
         page.goto(url, { waitUntil: 'domcontentloaded' }).then(() => {
             console.log(`[AppSheet] Go to ${url} ..`);
         });
